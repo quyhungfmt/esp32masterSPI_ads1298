@@ -32,61 +32,68 @@
 // Pins in use
 
 
-
-
-// Pins in use
 #define GPIO_MOSI 23
 #define GPIO_MISO 19
 #define GPIO_SCLK 18
 #define GPIO_CS 5
 #define GPIO_START 2
+
+uint8_t opcode[3];
+uint8_t channel1[3];
+uint8_t channel2[3];
+uint8_t channel3[3];
+uint8_t channel4[3];
+uint8_t channel5[3];
+uint8_t channel6[3];
+uint8_t channel7[3];
+uint8_t channel8[3];
 // Main application
+
+    spi_transaction_t t;
 void app_main(void)
 {
-    spi_device_handle_t handle;
-
-    // Configuration for the SPI bus
-    spi_bus_config_t buscfg = {
-        .mosi_io_num = GPIO_MOSI,
-        .miso_io_num = GPIO_MISO,
-        .sclk_io_num = GPIO_SCLK,
-        .quadwp_io_num = -1,
-        .quadhd_io_num = -1};
-
-    // Configuration for the SPI device on the other side of the bus
-    spi_device_interface_config_t devcfg = {
-        .command_bits = 0,
-        .address_bits = 0,
-        .dummy_bits = 0,
-        .clock_speed_hz = 2000000,
-        .duty_cycle_pos = 128, // 50% duty cycle
-        .mode = 1,
-        .spics_io_num = GPIO_CS,
-        .cs_ena_posttrans = 3, // Keep the CS low 3 cycles after transaction
-        .queue_size = 3};
-
-    spi_bus_initialize(VSPI_HOST, &buscfg, SPI_DMA_CH_AUTO);
-    spi_bus_add_device(VSPI_HOST, &devcfg, &handle);
-    spi_transaction_t t;
     memset(&t, 0, sizeof(t));
-    uint8_t senddata = 0xf0;
-    uint8_t getdata = 0xff;
+    gpio_set_direction(GPIO_NUM_2,GPIO_MODE_OUTPUT);
+    gpio_set_level(GPIO_NUM_2,1);
+    ESP_LOGI("START","LED 2 HIGH \n");
+    vTaskDelay(1000/portTICK_PERIOD_MS);
+    gpio_set_level(GPIO_NUM_2,0);
+    ESP_LOGI("START","LED 2 LOW \n");
+    vTaskDelay(1000/portTICK_PERIOD_MS);
+    
 
     printf("Master input:\n");
-    int i = 0;
-        t.flags =  SPI_TRANS_USE_TXDATA | SPI_TRANS_USE_RXDATA;
-        t.length =  16;
-        t.tx_data[0] = 0X08; // start
-        t.tx_data[1] = 0x10;
-        printf("data send[0] = 0x%02x \n",t.tx_data[0]);
-        printf("data send[1] = 0x%02x \n",t.tx_data[1]);
-        spi_device_polling_transmit(handle, &t);
+        // int i = 0;
+        // t.flags =  SPI_TRANS_USE_TXDATA | SPI_TRANS_USE_RXDATA;
+        // t.length =  16;
+        // t.tx_data[0] = 0X08; // start
+        // t.tx_data[1] = 0x10;
+        // printf("data send[0] = 0x%02x \n",t.tx_data[0]);
+        // printf("data send[1] = 0x%02x \n",t.tx_data[1]);
+        // spi_device_polling_transmit(handle, &t);
+    ADS_setup();
+    ADS_send(t,START);
+    ADS_send(t,RDATAC);
     while (1)
     {
-        t.length = 8;
-        t.rxlength = 8;
-        printf("data get[0]  = 0x%02x \n",t.rx_data[0]);
-        spi_device_polling_transmit(handle, &t);
-        vTaskDelay(1 / portTICK_PERIOD_MS);
+        ADS_get(t,opcode,"opcode");
+        ADS_get(t,channel1,"CHANNEL1");    
+        ADS_get(t,channel2,"CHANNEL2");
+        ADS_get(t,channel3,"CHANNEL3");
+        ADS_get(t,channel4,"CHANNEL4");
+        ADS_get(t,channel5,"CHANNEL5");
+        ADS_get(t,channel6,"CHANNEL6");
+        ADS_get(t,channel7,"CHANNEL7");
+        ADS_get(t,channel8,"CHANNEL8");
+        printf("\n");
+        printf("\n");
+        vTaskDelay(200/portTICK_PERIOD_MS);
+
+
+        // t.length = 8;
+        // t.rxlength = 8;
+        // printf("data get[0]  = 0x%02x \n",t.rx_data[0]);
+        // spi_device_polling_transmit(handle, &t);
+        // vTaskDelay(1 / portTICK_PERIOD_MS);
     }
 }

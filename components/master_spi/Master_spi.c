@@ -28,8 +28,9 @@
 #define FullT = 5 //(ns)
 
 
+    spi_device_handle_t handle;
 
-void ADS_setup(spi_device_handle_t handle)
+void ADS_setup()
 {
     ESP_LOGI("---------", "----------------------\n");
     ESP_LOGI("ADS_SETUP", "ADS BEGIN SETUP");
@@ -56,24 +57,30 @@ void ADS_setup(spi_device_handle_t handle)
     ESP_LOGI("ADS_SETUP", "SETUP!!");
 }
 
-void ADS_send(spi_device_handle_t handle,spi_transaction_t t, uint8_t data_send){
+void ADS_send(spi_transaction_t t, uint8_t data_send){
     memset(&t,0,sizeof(t));
     t.length = 8;
-    t.flags = SPI_TRANS_USE_TXDATA;
-    t.rx_data[0] = data_send;
-    spi_device_polling_transmit(handle,&t)
-    printf("SET OPCODE: 0x%02x \n",t.rxdata[0]);
+    t.flags = SPI_TRANS_USE_TXDATA | SPI_TRANS_USE_RXDATA;
+    t.tx_data[0] = data_send;
+    spi_device_polling_transmit(handle,&t);
+    printf("SET OPCODE: 0x%02x \n",t.tx_data[0]);
 }
 
-void ADS_get(spi_device_handle_t handle, spi_transaction_t t,uint8_t data[]){
+void ADS_get( spi_transaction_t t,uint8_t data[],char *tx){
+    char mess[20];
+    sprintf(mess,"%s",tx);
     memset(&t,0,sizeof(t));
+    t.flags = SPI_TRANS_USE_RXDATA|SPI_TRANS_USE_TXDATA;
     t.length = 24;
     t.rxlength = 24;
-    t.tx_data[0] = data[0];
-    t.tx_data[1] = data[1];
-    t.tx_data[2] = data[2];
-    ESP_LOGI("DATA","==========================\n");
-    printf("Received: 0X%02X - 0X%02X - 0X%02X \n",t.tx_data[0],t.tx_data[1],t.tx_data[2]);
+    spi_device_polling_transmit(handle,&t);
+    data[0] = t.rx_data[0];
+    data[1] = t.rx_data[1];
+    data[2] = t.rx_data[2];
+    printf("%s : 0X%02X - 0X%02X - 0X%02X \n",mess,data[0],data[1],data[2]);
+}
+void showdata(uint8_t data[]) {
+        printf("data: 0x%02x - 0x%02x - 0x%02x \n",data[0],data[1],data[2]);
 }
 
 
@@ -82,8 +89,21 @@ void ADS_get(spi_device_handle_t handle, spi_transaction_t t,uint8_t data[]){
 
 
 
-
-
+// int showdata(uint8_t data[],char *filename)
+// {
+//     char Filepath[256];
+//     FILE *file;
+//     sprintf(Filepath,"C:\\Users\\NGUYEN HUNG CTU\\Documents\\DATA_ADS1298\\%s",filename);
+//     printf("data: 0x%02x - 0x%02x - 0x%02x \n", data[0], data[1], data[2]);
+//     file = fopen(Filepath, "w");
+//     if (file == NULL) {
+//         printf("Không thể tạo file.\n");
+//         return 0;
+//     }
+//     fprintf(file,"---------%s---------\nDATA : 0x%02x - 0x%02x - 0x%02x",filename,data[0],data[1],data[2]);
+//     fclose(file);
+//     return 1;
+// }
 
 
 
