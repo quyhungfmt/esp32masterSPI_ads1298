@@ -37,7 +37,7 @@
 // void delay_ns(uint32_t ns);
 // uint8_t ADS_transfer(uint8_t byte_out);
 
-void ADS_setup();
+void ADS_setup(int clock);
 void ADS_send(spi_transaction_t t, uint8_t data_send);
 void ADS_get(spi_transaction_t t,uint8_t data[],char *tx);
 void showdata(uint8_t data[]);

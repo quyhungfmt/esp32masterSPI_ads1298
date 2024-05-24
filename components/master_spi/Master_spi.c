@@ -30,7 +30,7 @@
 
     spi_device_handle_t handle;
 
-void ADS_setup()
+void ADS_setup(int clock)
 {
     ESP_LOGI("---------", "----------------------\n");
     ESP_LOGI("ADS_SETUP", "ADS BEGIN SETUP");
@@ -46,7 +46,7 @@ void ADS_setup()
         .command_bits = 0,
         .address_bits = 0,
         .dummy_bits = 0,
-        .clock_speed_hz = CLOCK2,
+        .clock_speed_hz = clock,
         .duty_cycle_pos = 128, // 50% duty cycle
         .mode = 1,
         .spics_io_num = GPIO_CS,
@@ -60,12 +60,28 @@ void ADS_setup()
 void ADS_send(spi_transaction_t t, uint8_t data_send){
     memset(&t,0,sizeof(t));
     t.length = 8;
-    t.flags = SPI_TRANS_USE_TXDATA | SPI_TRANS_USE_RXDATA;
+    // t.flags = SPI_TRANS_USE_TXDATA | SPI_TRANS_USE_RXDATA;
     t.tx_data[0] = data_send;
     spi_device_polling_transmit(handle,&t);
     printf("SET OPCODE: 0x%02x \n",t.tx_data[0]);
 }
+void ADS_GET(spi_transaction_t *t,uint8_t data[]){
+    memset(&t,0,sizeof(spi_transaction_t));
 
+    t->flags = 0;
+    t->length = 216;
+    t->rxlength = 216;
+    t->rx_buffer = malloc(27); //27 BYTE = 216 BIT
+    t->tx_buffer = malloc(27); //27 BYTE = 216 BIT
+    spi_device_polling_transmit(handle, t);
+    memcpy(data, t->rx_buffer, 27); // Sao chép dữ liệu từ rx_buffer vào mảng data
+    printf("%s : ", mess);
+    for(int i = 0; i < 27; i++) {
+        printf("0X%02X ", data[i]);
+    }
+    printf("\n");
+    free(t->rx_buffer); // Giải phóng bộ nhớ đã cấp phát
+}
 void ADS_get( spi_transaction_t t,uint8_t data[],char *tx){
     char mess[20];
     sprintf(mess,"%s",tx);

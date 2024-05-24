@@ -71,9 +71,10 @@ void app_main(void)
         // printf("data send[0] = 0x%02x \n",t.tx_data[0]);
         // printf("data send[1] = 0x%02x \n",t.tx_data[1]);
         // spi_device_polling_transmit(handle, &t);
-    ADS_setup();
+    ADS_setup(CLOCK10);
     ADS_send(t,START);
     ADS_send(t,RDATAC);
+    int i = 0;
     while (1)
     {
         ADS_get(t,opcode,"opcode");
@@ -87,9 +88,7 @@ void app_main(void)
         ADS_get(t,channel8,"CHANNEL8");
         printf("\n");
         printf("\n");
-        vTaskDelay(200/portTICK_PERIOD_MS);
-
-
+        vTaskDelay(10/portTICK_PERIOD_MS);
         // t.length = 8;
         // t.rxlength = 8;
         // printf("data get[0]  = 0x%02x \n",t.rx_data[0]);
